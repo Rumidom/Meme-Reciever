@@ -142,9 +142,10 @@ def readTelegram(token):
         return result
     except Exception as e:
         sys.print_exception(e, sys.stdout)
+        machine.reset()
         return None
 
-def downloadFromID(token,FileId,chatid):
+def downloadFromID(token,FileId):
     url = 'https://api.telegram.org/bot'+token
     url = url+'/getFile?file_id='+FileId
     try:
@@ -171,6 +172,7 @@ def downloadFromID(token,FileId,chatid):
                 return filename
     except Exception as e:
         sys.print_exception(e, sys.stdout)
+        machine.reset()
         return None
         
 def checkForNewMessages(token,checking_Delay = 5):
@@ -189,6 +191,7 @@ def checkForNewMessages(token,checking_Delay = 5):
                 print("checked:",MSG_id,chat_id)
                 if MSG_id != lastMSG_id:
                     print('new message')
+                    #print(lastMSG[0]['message'])
                     if 'text' in lastMSG[0]['message']:
                         display.fill(0)
                         PrintToScreen('New Message!',0,0)
@@ -205,7 +208,9 @@ def checkForNewMessages(token,checking_Delay = 5):
                         PrintToScreen(message_piece,0,20+line*10)
                         lastMSG_id = MSG_id
                         sendTelegram(token,chat_id,'Message Recieved')
-
+                    elif 'photo' in lastMSG[0]['message']:
+                        sendTelegram(token,chat_id,'image must be a gif')
+                        lastMSG_id = MSG_id
                     elif 'document' in lastMSG[0]['message']:
                         message_json = lastMSG[0]['message']
                         DW_File = True
@@ -214,28 +219,31 @@ def checkForNewMessages(token,checking_Delay = 5):
                         thumbnail = message_json['document']['thumbnail']
                         filetype = message_json['document']['mime_type'].split('/')[-1]
                         if thumbnail['height'] != 240 or thumbnail['width'] != 240:
+                            print('invalid size:',thumbnail['width'],thumbnail['height'])
                             sendTelegram(token,chat_id,'image must be 240x240')
                             DW_File = False
                         if filetype != 'gif':
+                            print('invalid filetype:',filetype)
                             sendTelegram(token,chat_id,'image must be a gif')
                             DW_File = False
                         if DW_File:
                             display.fill(0)
                             PrintToScreen('New Meme Arrived!',0,0)
                             deletePreviusMemes()
-                            file_name = downloadFromID(token,fileid,chat_id)
+                            file_name = downloadFromID(token,fileid)
                             if file_name != None:
                                 gif_obj = None
                                 gif_obj = gif(file_name)
                                 display.fill(0)
                                 sendTelegram(token,chat_id,'Meme Recieved')
-                                lastMSG_id = MSG_id
                                 gif_obj.BlitToScreen(0,drawToScreen)
+                        lastMSG_id = MSG_id
                                     
                     
         except Exception as e:
             print("Error Downloading Message")
             sys.print_exception(e, sys.stdout)
+            machine.reset()
         time.sleep(checking_Delay)
         
 def deletePreviusMemes():
