@@ -113,6 +113,7 @@ def sendTelegram(token,chat_id,Message):
     url = 'https://api.telegram.org/bot'+token+'/sendMessage'
     
     try:
+        gc.collect()
         resp = urequests.post(url, json=data,headers=headers)
         resp.close()
         return True
@@ -130,48 +131,53 @@ def readTelegram(token):
     url = 'https://api.telegram.org/bot'+token
     result = []
     try:
-        update_messages = urequests.post(url + '/getUpdates', json=query_updates).json() 
-        if 'result' in update_messages:
-            for item in update_messages['result']:
+        gc.collect()
+        update_messages = urequests.post(url + '/getUpdates', json=query_updates)
+        messages = update_messages.json()
+        update_messages.close()
+        
+        if 'result' in messages:
+            for item in messages['result']:
                 result.append(item)
         return result
-    except (ValueError):
-        return None
-    except (OSError):
-        print("OSError: request timed out")
+    except Exception as e:
+        sys.print_exception(e, sys.stdout)
         return None
 
-def downloadFromID(token,FileId):
+def downloadFromID(token,FileId,chatid):
     url = 'https://api.telegram.org/bot'+token
     url = url+'/getFile?file_id='+FileId
-
-    # Fetch data from a URL
-    PrintToScreen('Fetching filepath',0,10)
-    resp = urequests.get(url)
-    if resp.status_code == 200:
-        if resp.json()['ok']:
-            result = resp.json()['result']
-            file_path = result['file_path']
-            filename = file_path.split('/')[-1]
-            resp.close()
-            url = 'https://api.telegram.org/file/bot'+token
-            url = url+'/'+file_path
-            PrintToScreen('Downloading Meme',0,20)
-            #print('Downloading Meme')
-            resp = urequests.get(url)
-            #print(url)
-            #print(resp.json())
-            f = open(filename, "wb")
-            f.write(resp.content)
-            f.close()
-            resp.close()
-            gc.collect()
-            return filename
+    try:
+        # Fetch data from a URL
+        PrintToScreen('Fetching filepath',0,10)
+        gc.collect()
+        resp = urequests.get(url)
+        if resp.status_code == 200:
+            if resp.json()['ok']:
+                result = resp.json()['result']
+                file_path = result['file_path']
+                filename = file_path.split('/')[-1]
+                resp.close()
+                url = 'https://api.telegram.org/file/bot'+token
+                url = url+'/'+file_path
+                PrintToScreen('Downloading Meme',0,20)
+                gc.collect()
+                resp = urequests.get(url)
+                f = open(filename, "wb")
+                f.write(resp.content)
+                f.close()
+                resp.close()
+                gc.collect()
+                return filename
+    except Exception as e:
+        sys.print_exception(e, sys.stdout)
+        return None
         
 def checkForNewMessages(token,checking_Delay = 5):
     lastMSG_id = 0
     #micropython.mem_info()
     display.fill(0)
+    
     while True:
         if lastMSG_id == 0:
             PrintToScreen('Waiting For Messages',0,0)
@@ -180,38 +186,53 @@ def checkForNewMessages(token,checking_Delay = 5):
             if lastMSG != None:
                 MSG_id = lastMSG[0]['message']['message_id']
                 chat_id = lastMSG[0]['message']['from']['id']
+                print("checked:",MSG_id,chat_id)
                 if MSG_id != lastMSG_id:
-                    if lastMSG_id != 0:
-                        if 'text' in lastMSG[0]['message']:
-                            display.fill(0)
-                            PrintToScreen('New Message!',0,0)
-                            firstName = lastMSG[0]['message']['chat']['first_name']
-                            message = lastMSG[0]['message']['text']
-                            line = 0
-                            message_piece = firstName+': '
-                            for char in message:
-                                message_piece += char
-                                if len(message_piece)%25 == 0:
-                                    PrintToScreen(message_piece,0,20+line*10)
-                                    line = line+1
-                                    message_piece = ''
-                            PrintToScreen(message_piece,0,20+line*10)
-                            sendTelegram(token,chat_id,'Message Recieved')
+                    print('new message')
+                    if 'text' in lastMSG[0]['message']:
+                        display.fill(0)
+                        PrintToScreen('New Message!',0,0)
+                        firstName = lastMSG[0]['message']['chat']['first_name']
+                        message = lastMSG[0]['message']['text']
+                        line = 0
+                        message_piece = firstName+': '
+                        for char in message:
+                            message_piece += char
+                            if len(message_piece)%25 == 0:
+                                PrintToScreen(message_piece,0,20+line*10)
+                                line = line+1
+                                message_piece = ''
+                        PrintToScreen(message_piece,0,20+line*10)
+                        lastMSG_id = MSG_id
+                        sendTelegram(token,chat_id,'Message Recieved')
 
-                        if 'document' in lastMSG[0]['message']:
+                    elif 'document' in lastMSG[0]['message']:
+                        message_json = lastMSG[0]['message']
+                        DW_File = True
+                        gc.collect()
+                        fileid = lastMSG[0]['message']['document']['file_id']
+                        thumbnail = message_json['document']['thumbnail']
+                        filetype = message_json['document']['mime_type'].split('/')[-1]
+                        if thumbnail['height'] != 240 or thumbnail['width'] != 240:
+                            sendTelegram(token,chat_id,'image must be 240x240')
+                            DW_File = False
+                        if filetype != 'gif':
+                            sendTelegram(token,chat_id,'image must be a gif')
+                            DW_File = False
+                        if DW_File:
                             display.fill(0)
-                            PrintToScreen('New Meme Arrived!',0,10)
+                            PrintToScreen('New Meme Arrived!',0,0)
                             deletePreviusMemes()
-                            gc.collect()
-                            fileid = lastMSG[0]['message']['document']['file_id']
-                            file_name = downloadFromID(token,fileid)
-                            gif_obj = None
-                            gif_obj = gif(file_name)
-                            display.fill(0)
-                            sendTelegram(token,chat_id,'Meme Recieved')
-                            gif_obj.BlitToScreen(0,drawToScreen)
-                            
-                    lastMSG_id = MSG_id
+                            file_name = downloadFromID(token,fileid,chat_id)
+                            if file_name != None:
+                                gif_obj = None
+                                gif_obj = gif(file_name)
+                                display.fill(0)
+                                sendTelegram(token,chat_id,'Meme Recieved')
+                                lastMSG_id = MSG_id
+                                gif_obj.BlitToScreen(0,drawToScreen)
+                                    
+                    
         except Exception as e:
             print("Error Downloading Message")
             sys.print_exception(e, sys.stdout)
