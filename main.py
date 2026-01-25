@@ -5,13 +5,12 @@ from machine import Pin, SPI
 import framebuf
 from random import random, seed, randint
 from ugif import gif
-import requests
 import network
 import fontlib
 import urequests
 import os
-# import micropython
-# https://api.telegram.org/bot8412107961:AAEZ1OhvuBAmX09f1aOWfNIJp2SknjRn5Y4/getUpdates
+import sys
+
 # set landscape screen
 screen_width = 240
 screen_height = 240
@@ -41,12 +40,10 @@ display = st7789.ST7789(
     rotation=screen_rotation)
 
 wlan = network.WLAN(network.STA_IF)
-
 IBM_font = fontlib.font("IBM BIOS (8,8).bmp") # Loads font to ram
 textfbuf = framebuf.FrameBuffer(textBuffer, textW, textH, framebuf.RGB565)
 textfbuf.fill(0)
 white = st7789.color565(255, 255, 255)
-
 
 def PrintToScreen(font,text,x,y):
     textW = screen_width
@@ -86,20 +83,19 @@ wifi_ssid = ''
 wifi_password = ''
 telegram_token = ''
 
-with open("config.txt", "r") as file:
-    lines = file.readlines()
-    for line in lines:
-        splt = line.split('=')
-        if splt[0] == 'SSID':
-            wifi_ssid = splt[1].strip()
-        elif splt[0] == 'PASS':
-            wifi_password = splt[1].strip()
-        elif splt[0] == 'TOKEN':
-            telegram_token = splt[1].strip()
+def getConfig():
+    with open("config.txt", "r") as file:
+        lines = file.readlines()
+        for line in lines:
+            splt = line.split('=')
+            if splt[0] == 'SSID':
+                wifi_ssid = splt[1].strip()
+            elif splt[0] == 'PASS':
+                wifi_password = splt[1].strip()
+            elif splt[0] == 'TOKEN':
+                telegram_token = splt[1].strip()
+    return (wifi_ssid,wifi_password,telegram_token)    
     
-print("Conecting to: ",wifi_ssid) 
-ConnectToSSID(wifi_ssid,password=wifi_password)
-
 def drawToScreen(x,y,color):
     #global gif_buffer
     #buffer_width = 240
@@ -111,6 +107,19 @@ def drawToScreen(x,y,color):
         #display.blit_buffer(gif_buffer, 0, y, buffer_width, buffer_height)
         #gif_buffer = bytearray()
     display.pixel(x,y,color)
+
+def sendTelegram(token,chat_id,Message):
+    data = {"chat_id": chat_id,"text": Message}
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    url = 'https://api.telegram.org/bot'+token+'/sendMessage'
+    
+    try:
+        resp = urequests.post(url, json=data,headers=headers)
+        resp.close()
+        return True
+    except Exception as e:
+        sys.print_exception(e, sys.stdout)
+        return None
 
 def readTelegram(token):
     query_updates = {
@@ -130,7 +139,6 @@ def readTelegram(token):
     except (ValueError):
         return None
     except (OSError):
-        
         print("OSError: request timed out")
         return None
 
@@ -173,6 +181,7 @@ def checkForNewMessages(token,checking_Delay = 5):
             lastMSG = readTelegram(token)
             if lastMSG != None:
                 MSG_id = lastMSG[0]['message']['message_id']
+                chat_id = lastMSG[0]['message']['from']['id']
                 if MSG_id != lastMSG_id:
                     if lastMSG_id != 0:
                         if 'text' in lastMSG[0]['message']:
@@ -189,8 +198,10 @@ def checkForNewMessages(token,checking_Delay = 5):
                                     line = line+1
                                     message_piece = ''
                             PrintToScreen(IBM_font,message_piece,0,20+line*10)
+                            sendTelegram(token,chat_id,'Message Recieved')
 
                         if 'document' in lastMSG[0]['message']:
+                            display.fill(0)
                             PrintToScreen(IBM_font,'New Meme Arrived!',0,10)
                             deletePreviusMemes()
                             gc.collect()
@@ -199,11 +210,13 @@ def checkForNewMessages(token,checking_Delay = 5):
                             gif_obj = None
                             gif_obj = gif(file_name)
                             display.fill(0)
+                            sendTelegram(token,chat_id,'Meme Recieved')
                             gif_obj.BlitToScreen(0,drawToScreen)
+                            
                     lastMSG_id = MSG_id
         except Exception as e:
             print("Error Downloading Message")
-            print(e)
+            sys.print_exception(e, sys.stdout)
         time.sleep(checking_Delay)
         
 def deletePreviusMemes():
@@ -213,5 +226,6 @@ def deletePreviusMemes():
             print('deleting ',file)
             os.remove(file)
 
-
+wifi_ssid,wifi_password,telegram_token = getConfig()
+ConnectToSSID(wifi_ssid,password=wifi_password)
 checkForNewMessages(telegram_token)
