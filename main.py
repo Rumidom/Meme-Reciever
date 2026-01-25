@@ -17,8 +17,6 @@ screen_height = 240
 screen_rotation = 3
 textH = 8
 textW = 240
-#gif_buffer = bytearray(screen_width*2)
-textBuffer = bytearray(screen_width * textH * 2) #two bytes for each pixel
 
 spi = SPI(1,
           baudrate=31250000,
@@ -40,17 +38,18 @@ display = st7789.ST7789(
     rotation=screen_rotation)
 
 wlan = network.WLAN(network.STA_IF)
-IBM_font = fontlib.font("IBM BIOS (8,8).bmp") # Loads font to ram
-textfbuf = framebuf.FrameBuffer(textBuffer, textW, textH, framebuf.RGB565)
-textfbuf.fill(0)
 white = st7789.color565(255, 255, 255)
 
-def PrintToScreen(font,text,x,y):
+def PrintToScreen(text,x,y):
     textW = screen_width
     textH = 8
-    textfbuf.fill(0)
+    IBM_font = fontlib.font("IBM BIOS (8,8).bmp") # Loads font to ram
+    textBuffer = bytearray(screen_width * textH * 2)
+    textfbuf = framebuf.FrameBuffer(textBuffer, textW, textH, framebuf.RGB565)
     fontlib.prt(text,0,0,1,textfbuf,IBM_font,color=white)
     display.blit_buffer(textBuffer, x, y, textW, textH)
+    textBuffer = bytearray()
+    gc.collect()
     
 def ConnectToSSID(SSID,password=''):
     wlan.active(True)
@@ -60,21 +59,21 @@ def ConnectToSSID(SSID,password=''):
     timeout = 0
     display.fill(0)
     while not wlan.isconnected():
-        PrintToScreen(IBM_font,wifi_ssid,0,0)
-        PrintToScreen(IBM_font,'Connecting'+'.'*timeout,0,10)
+        PrintToScreen(wifi_ssid,0,0)
+        PrintToScreen('Connecting'+'.'*timeout,0,10)
         timeout += 1
         if timeout == 10:
             break
         time.sleep(1)
     if wlan.isconnected():
         display.fill(0)
-        PrintToScreen(IBM_font,'Connected!',0,0)
-        PrintToScreen(IBM_font,str(wlan.ifconfig()[0]),0,10)
+        PrintToScreen('Connected!',0,0)
+        PrintToScreen(str(wlan.ifconfig()[0]),0,10)
         time.sleep(4)
         return(True)
     else:
         display.fill(0)
-        PrintToScreen(IBM_font,"Connection Failed.",0,0)
+        PrintToScreen("Connection Failed.",0,0)
         time.sleep(4)
         return(False)
 
@@ -147,7 +146,7 @@ def downloadFromID(token,FileId):
     url = url+'/getFile?file_id='+FileId
 
     # Fetch data from a URL
-    PrintToScreen(IBM_font,'Fetching filepath',0,10)
+    PrintToScreen('Fetching filepath',0,10)
     resp = urequests.get(url)
     if resp.status_code == 200:
         if resp.json()['ok']:
@@ -157,7 +156,7 @@ def downloadFromID(token,FileId):
             resp.close()
             url = 'https://api.telegram.org/file/bot'+token
             url = url+'/'+file_path
-            PrintToScreen(IBM_font,'Downloading Meme',0,20)
+            PrintToScreen('Downloading Meme',0,20)
             #print('Downloading Meme')
             resp = urequests.get(url)
             #print(url)
@@ -171,12 +170,11 @@ def downloadFromID(token,FileId):
         
 def checkForNewMessages(token,checking_Delay = 5):
     lastMSG_id = 0
-    global textBuffer
     #micropython.mem_info()
     display.fill(0)
     while True:
         if lastMSG_id == 0:
-            PrintToScreen(IBM_font,'Waiting For Messages',0,0)
+            PrintToScreen('Waiting For Messages',0,0)
         try:
             lastMSG = readTelegram(token)
             if lastMSG != None:
@@ -186,7 +184,7 @@ def checkForNewMessages(token,checking_Delay = 5):
                     if lastMSG_id != 0:
                         if 'text' in lastMSG[0]['message']:
                             display.fill(0)
-                            PrintToScreen(IBM_font,'New Message!',0,0)
+                            PrintToScreen('New Message!',0,0)
                             firstName = lastMSG[0]['message']['chat']['first_name']
                             message = lastMSG[0]['message']['text']
                             line = 0
@@ -194,15 +192,15 @@ def checkForNewMessages(token,checking_Delay = 5):
                             for char in message:
                                 message_piece += char
                                 if len(message_piece)%25 == 0:
-                                    PrintToScreen(IBM_font,message_piece,0,20+line*10)
+                                    PrintToScreen(message_piece,0,20+line*10)
                                     line = line+1
                                     message_piece = ''
-                            PrintToScreen(IBM_font,message_piece,0,20+line*10)
+                            PrintToScreen(message_piece,0,20+line*10)
                             sendTelegram(token,chat_id,'Message Recieved')
 
                         if 'document' in lastMSG[0]['message']:
                             display.fill(0)
-                            PrintToScreen(IBM_font,'New Meme Arrived!',0,10)
+                            PrintToScreen('New Meme Arrived!',0,10)
                             deletePreviusMemes()
                             gc.collect()
                             fileid = lastMSG[0]['message']['document']['file_id']
