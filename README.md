@@ -10,7 +10,7 @@ Once powered it will load the last message sent to the Telegram bot, only static
 ## Wiring 
 This script was written for the ESP32 C3 Super Mini board but should really work best on the ESP32 S3 Zero as it is faster
 and has more ram (I havent tested it yet) 
-![Wiring](https://github.com/Rumidom/Meme-Reciever/blob/main/images/2026-01-24%2023-43-15.png)
+![Wiring](https://github.com/Rumidom/Meme-Reciever/blob/main/images/Wiring.jpg)
 
 ## Install the script
 using [thonny](https://thonny.org/) or other micropython IDE upload the contents of the lib folder main.py and your
