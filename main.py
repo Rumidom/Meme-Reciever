@@ -2,6 +2,7 @@ import time
 import st7789 as st7789
 import fontlib
 from machine import Pin, SPI
+import machine
 import framebuf
 from random import random, seed, randint
 from ugif import gif
@@ -17,6 +18,15 @@ screen_height = 240
 screen_rotation = 3
 textH = 8
 textW = 240
+
+
+Power_button = Pin(3, Pin.IN, Pin.PULL_UP)
+
+
+
+# waits for power button to be pressed
+while not Power_button.value():
+    pass
 
 spi = SPI(1,
           baudrate=31250000,
@@ -36,6 +46,14 @@ display = st7789.ST7789(
     dc=Pin(8, Pin.OUT),
     backlight=Pin(7, Pin.OUT),
     rotation=screen_rotation)
+
+# interupt to reset the system when power button is turned off
+def handle_interrupt(pin):
+    print("Powering Down")
+    display.fill(0)
+    machine.reset()
+    
+Power_button.irq(trigger=Pin.IRQ_FALLING, handler=handle_interrupt)
 
 wlan = network.WLAN(network.STA_IF)
 white = st7789.color565(255, 255, 255)
@@ -143,7 +161,6 @@ def readTelegram(token):
     except Exception as e:
         sys.print_exception(e, sys.stdout)
         machine.reset()
-        return None
 
 def downloadFromID(token,FileId):
     url = 'https://api.telegram.org/bot'+token
@@ -173,7 +190,6 @@ def downloadFromID(token,FileId):
     except Exception as e:
         sys.print_exception(e, sys.stdout)
         machine.reset()
-        return None
         
 def checkForNewMessages(token,checking_Delay = 5):
     lastMSG_id = 0

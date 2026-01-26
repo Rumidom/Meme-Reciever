@@ -2,6 +2,7 @@ import struct
 import gc
 import os
 import time
+#import micropython
 
 def ByteArrayReverse(Barr):
     l = list(Barr)
@@ -21,6 +22,7 @@ class gif():
         src = open(path, "rb")
         Header = self.getHeader(src)
         self.path = path
+        dummybuffer = bytearray(os.stat(path)[6])
         self.ID_tag = Header[0]
         self.Version = Header[1]
         self.Width = Header[2]
@@ -63,7 +65,6 @@ class gif():
         clearCode = 2 ** palBits      # LZW clear code
         endCode   = 2 ** palBits + 1  # LZW end code
         entry     = bytearray()       # reconstructed dictionary entry
-        imageData = bytearray()       # decoded image data
         codeCount = 0                 # number of LZW codes read (statistics only)
         bitCount  = 0                 # number of LZW bits read (statistics only)
 
@@ -169,6 +170,7 @@ class gif():
         return subBlocksList    
     
     def ReadFrameData(self,src):
+        gc.collect()
         frameData = bytearray()
         while True:
             subBlockLenght = src.read(1)[0]
