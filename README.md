@@ -16,5 +16,5 @@ using [thonny](https://thonny.org/) or other micropython IDE upload the contents
 config.txt
 
 ## 3D printing files
-[ESP32 Mini Computer](Cults 3d Link)
+[ESP32 Mini Computer](https://cults3d.com/en/3d-model/gadget/esp32-mini-vintage-computer)
 
