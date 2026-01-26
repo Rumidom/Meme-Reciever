@@ -15,6 +15,9 @@ This script was written for the [ESP32 C3 Super Mini](https://s.click.aliexpress
 using [thonny](https://thonny.org/) or other micropython IDE upload the contents of the lib folder, main.py and your
 config.txt
 
+## GIFs
+I created a few gifs, they are on the on the '240X240 gifs' folder these will work if sent via telegram, you can resize and crop your own at https://ezgif.com/
+
 ## 3D printing files
 [ESP32 Mini Computer](https://cults3d.com/en/3d-model/gadget/esp32-mini-vintage-computer)
 
