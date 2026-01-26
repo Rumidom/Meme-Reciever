@@ -9,9 +9,13 @@ This script will receive messages and gifs from a telegram bot and display them 
 you'll need to change the variables on the config file to include your telegram bot token and wifi credentials.
 Once powered it will load the last message sent to the Telegram bot, only static 240x240 GIFs will be displayed.
 
+## Wiring 
+This script was written for the ESP32 C3 Super Mini board but should really work best on the ESP32 S3 Zero as it is faster
+and has more ram (I havent tested it yet) 
+
 ## Install the script
 
-using ![thonny](https://thonny.org/) or other micropython IDE upload the contents of the lib folder main.py and your
+using [thonny](https://thonny.org/) or other micropython IDE upload the contents of the lib folder main.py and your
 config.txt
 
 ## 3D printing files
