@@ -12,7 +12,7 @@ This script was written for the [ESP32 C3 Super Mini](https://s.click.aliexpress
 ![Wiring](https://github.com/Rumidom/Meme-Reciever/blob/main/images/Wiring.jpg)
 
 ## Install the script
-using [thonny](https://thonny.org/) or other micropython IDE upload the contents of the lib folder main.py and your
+using [thonny](https://thonny.org/) or other micropython IDE upload the contents of the lib folder, main.py and your
 config.txt
 
 ## 3D printing files
