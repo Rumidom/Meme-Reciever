@@ -22,8 +22,6 @@ textW = 240
 
 Power_button = Pin(3, Pin.IN, Pin.PULL_UP)
 
-
-
 # waits for power button to be pressed
 while not Power_button.value():
     pass
