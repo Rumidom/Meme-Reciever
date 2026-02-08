@@ -8,14 +8,16 @@ you'll need to change the variables on the config file to include your telegram 
 Once powered it will load the last message sent to the Telegram bot, only static 240x240 GIFs will be displayed.
 
 ## Wiring 
-This script was written for the ESP32 C3 Super Mini board but should really work best on the ESP32 S3 Zero as it is faster
-and has more ram (I havent tested it yet) 
-![Wiring](https://github.com/Rumidom/Meme-Reciever/blob/main/images/2026-01-24%2023-43-15.png)
+This script was written for the [ESP32 C3 Super Mini](https://s.click.aliexpress.com/e/_c3DhjHGf) but should really work best on the [ESP32 S3 Zero](https://s.click.aliexpress.com/e/_c2yoPlzh) as it is faster and has more ram (I havent tested it yet) 
+![Wiring](https://github.com/Rumidom/Meme-Reciever/blob/main/images/Wiring.jpg)
 
 ## Install the script
-using [thonny](https://thonny.org/) or other micropython IDE upload the contents of the lib folder main.py and your
+using [thonny](https://thonny.org/) or other micropython IDE upload the contents of the lib folder, main.py and your
 config.txt
 
+## GIFs
+I created a few gifs, they are on the on the '240X240 gifs' folder these will work if sent via telegram, you can resize and crop your own at https://ezgif.com/
+
 ## 3D printing files
-[ESP32 Mini Computer](Cults 3d Link)
+[ESP32 Mini Computer](https://cults3d.com/en/3d-model/gadget/esp32-mini-vintage-computer)
 
