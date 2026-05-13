@@ -8,7 +8,9 @@ you'll need to change the variables on the config file to include your telegram 
 Once powered it will load the last message sent to the Telegram bot, only static 240x240 GIFs will be displayed.
 
 ## Wiring 
-This script was written for the [ESP32 C3 Super Mini](https://s.click.aliexpress.com/e/_c3DhjHGf) but should really work best on the [ESP32 S3 Zero](https://s.click.aliexpress.com/e/_c2yoPlzh) as it is faster and has more ram (I havent tested it yet) 
+This script originally was written for the [ESP32 C3 Super Mini](https://s.click.aliexpress.com/e/_c3DhjHGf) but works best on the [ESP32 S3 Zero](https://s.click.aliexpress.com/e/_c2yoPlzh) as it is faster and has more ram.
+![Wiring](https://github.com/Rumidom/Meme-Reciever/blob/main/images/Wiring.jpg)
+
 ![Wiring](https://github.com/Rumidom/Meme-Reciever/blob/main/images/Wiring.jpg)
 
 ## Install the script
